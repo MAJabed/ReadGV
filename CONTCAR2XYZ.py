@@ -1,44 +1,62 @@
 #!//home/mohammed.jabed/bin/anaconda3/bin/python
 
 
-####################################################
-##
-## Script to convert VASP-5.0 CONTCAR/POSCAR file to XYZ (default) and 
-## gaussian input file (.com) 
-## arg 1 should be 'com' to get .com file. 
-## 
-##$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+######################################################################################
+## Script to convert VASP-5.0 CONTCAR/POSCAR file to xyz file format (default) 		$$
+## Or, gaussian input file (.com) 													$$
+## The first argument is a input file or CONTCAR is default (if available) 			$$
+## To get gaussian input file format, add argument 'com' 							$$
+## To specify output file name, optional atgument:  out=filename					%%
+## Example run: python CONTCAR2XYZ.py POSCAR com out=filename  						%%
+##  			Mohammed A Jabed (jabed.abu@gmail.com) 								%%
+##$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 import numpy as np
-from sys import argv 
-import os  
- 
-#Reading contcar file, if exist, else read the CONTCAR type file name  
-if len(argv) < 2: 
- try: 
-  name = 'CONTCAR'
-  f_CONT=open(name,'r') 
-  name_out='CONTCAR'
- except: 
-  name=input("No CONTCAR file in the directory, file name:  ") 
-  f_CONT=open(name,'r') 
-  name_out=name.split('.')[0]
+from sys import argv, platform  
+import os , select   
 
-if len(argv) >= 2: 
-# try:
- name = argv[1]
- f_CONT = open(name,'r') 
- name_out=name.split('.')[0]
-# except: 
-#  name = argv[2]
-#  f_CONT=open(name,'r')
+#Reading contcar file, if exist, else read the CONTCAR type file name given as frist argument 
+try: 
+	name = argv[1] 
+	if not os.path.isfile(name):  
+		print('File not found: %s' %name) 
+		name=input("Input file name to convert:  ").strip() 
+except: 
+	if 'lin' in platform: 
+		print("What is the input file name to convert (30s waiting time):")
+		i, o, e = select.select( [sys.stdin], [], [], 30 )
+		if len(i.stript())==0: 
+			print('No File name is given.') 
+			if os.path.isfile('CONTCAR'):
+				print('CONTCAR file is found, using the CONTCAR file')
+				name = 'CONTCAR' 
+		else:
+			name = i.strip() 
+	elif 'win' in platform: 
+		name=input("Input file name to convert:  ").strip()  
+		if len(name.strip())==0: 
+			if os.path.isfile('CONTCAR'):
+				print('CONTCAR file is found, using the CONTCAR file')
+				name = 'CONTCAR' 
+			
+if os.path.isfile(name):
+	f_CONT=open(name,'r') 
+	name_out=name.split('.')[0]
+else: 
+	print('File not found: %s' %name) 
+	exit() 
 
 Gaus_out=False 
-if "com" in argv: 
- Gaus_out=True  
+for i in argv:
+	if i == "com":  
+		Gaus_out=True 
+	if i.startswith('out='): 
+		name_out = i.split('=')[-1].rstrip('.com').rstrip('.xyz')
+
 
 # reading file, and cell normalizing factor  
 line_CONT = f_CONT.readlines()  
+compname = line_CONT[0] 
 sigma = float(line_CONT[1].split()[0]) 
 #print(line_CONT[-5:])
 #Checking file format 
@@ -80,7 +98,7 @@ else:
 		print('Trying to read Direct coordinate format, found string in line, \nScript is quiting') 
 		exit() 
 
-
+ 
 Atom_symbol =[] 
 for i in range(len(Elements)): 
  Atom_symbol = Atom_symbol + [Elements[i]]*El_num[i] 
@@ -96,7 +114,7 @@ if selec_dynm is True:
  Cord_Str = np.c_[AA,np.asarray(Cart_Cord).round(4)] 
 elif selec_dynm is False: 
  Cord_Str = np.c_[np.asarray(Atom_symbol),np.asarray(Cart_Cord).round(4)] 
-
+print(name_out)
 if Gaus_out == True: 
  Header = '''%%mem=20GB
 %%nprocshared=40
@@ -107,23 +125,17 @@ if Gaus_out == True:
 %s
 
 0 1
-''' %name
+''' %compname.rstrip('\n')
  
  if os.path.isfile('%s.com'%name_out):
   print ('%s.com is exist'%name_out) 
-  name = input('What should be the output file name?:').replace(" ", "")  
-  try:
-   os.remove(name) 
-  except FileNotFoundError: 
-   pass
-  if len(name)==0: 
-   name= '%s.com'%name_out
-   print('Overwriting the file %s'%name)   
- else:
-  name = '%s.com'%name_out   
- if '.' not in name: 
-  name='%s.com'%name
- with open(name, "w") as f:
+  name = input('What should be the output file name?:').replace(" ", "").rstrip('.com')  
+  if not len(name)==0: 
+   name_out= name     
+  if os.path.isfile('%s.com'%name_out): 
+   os.remove('%s.com'%name_out) 
+   print('Overwriting the file %s.com'%name_out)
+ with open('%s.com'%name_out, "w") as f:
   f.write(Header)
   if selec_dynm is True: 
    np.savetxt(f, Cord_Str,fmt='%-5.10s %-5.10s %-10.10s  %-10.10s  %-10.10s')
@@ -131,8 +143,22 @@ if Gaus_out == True:
    np.savetxt(f, Cord_Str,fmt='%-5.10s  %-10.10s  %-10.10s  %-10.10s')
   PBC = np.c_[np.asarray(['Tv','Tv','Tv']),XYZ.astype('<U10')] 
   np.savetxt(f, PBC,fmt='%-5.10s  %-10.10s  %-10.10s  %-10.10s')
-else :  
-  np.savetxt('%s.xyz'%name_out,np.c_[Cord_Str[:,0],Cord_Str[:,-3:]],header="%.0f \n"%sum(El_num),comments="",fmt='%-5.10s  %-10.10s  %-10.10s  %-10.10s') 
-  
-print('Gaussian input file is written in the file name %s' %name_out) 
+ print('Gaussian input file is written in the file name %s.com' %name_out) 
+ 
+else :
+ if os.path.isfile('%s.xyz'%name_out):
+  print ('%s.xyz is exist'%name_out) 
+  name = input('What should be the output file name?:').replace(" ", "").rstrip('.xyz')  
+  if not len(name)==0: 
+   name_out= name     
+  if os.path.isfile('%s.xyz'%name_out): 
+   os.remove('%s.xyz'%name_out) 
+   print('Overwriting the file %s.xyz'%name_out)
+ with open('%s.xyz'%name_out.rstrip('.xyz'), "a") as f_out: 
+  print(len(Cord_Str))
+  f_out.write('%i \n' %len(Cord_Str))
+  f_out.write('%s \n' %compname.rstrip('\n')) 
+  np.savetxt(f_out,np.c_[Cord_Str[:,0],Cord_Str[:,-3:]],header="%.0f \n"%sum(El_num),comments="",
+			fmt='%-5.10s  %-10.10s  %-10.10s  %-10.10s') 
+ print('xyz file is written in the file name %s.xyz' %name_out) 
 print('Happy Calculation') 

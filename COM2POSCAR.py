@@ -7,15 +7,19 @@ import os
 
 # This script can read Gaussian input file format, .com or .gif and 
 # Convert it POSCAR file format to use in VASP  
-# Input file should containe PBC information (Tv) 
+# Input file should containe PBC information (Tv) (Tools > PBC > cell  in Gaussview) 
 # Following Variable can read - 
 # Gaussian input file name: argument[1]  
-# Cartesian or Farctional coodinates: cartesian=True/False or Direct=True/False ; Default: Direct=True  (optional)
+# Optional arguments 
+# Cartesian or Farctional coodinates: cartesian=True/False or Direct=True/False ; Default: Direct=True  
 # Select optimization Select=True/False; Default: True if -1/0 flag in inputfile 
 # Output file name out=filename  (optional) 
 ##___________________________________________________________________
-# Example syntax: COM2POSCAR.py Example1.com Select=True Direct=True  
+# Example syntax: python COM2POSCAR.py Example1.com Select=True Direct=True  
 #--------------------------------------------------------------------
+# If you have suggestions, comments,s or questions, let me know in the Discussion section 
+# $$$$$$$$$$$$$$$$$$$$  Mohammed A Jabed, Jabed.abu@gmail.com  $$$$$$$$$$$$$$$$$$$$$$$$$
+
 
 def angle(a,b):
  import numpy as np 
