@@ -1,0 +1,15 @@
+README.md
+setup.py
+vasputils/COM2POSCAR.py
+vasputils/CONTCAR2XYZ.py
+vasputils/Plot.py
+vasputils/Read_OUTCAR.py
+vasputils/__init__.py
+vasputils/__main__.py
+vasputils/fileconversion.py
+vasputils/read_outcar.py
+vasputils/vasputils.py
+vasputils.egg-info/PKG-INFO
+vasputils.egg-info/SOURCES.txt
+vasputils.egg-info/dependency_links.txt
+vasputils.egg-info/top_level.txt
