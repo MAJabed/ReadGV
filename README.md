@@ -11,8 +11,8 @@ This is actively developing version. Current version is very first trial.
 python  python -m vasputils [-job] [vasp2gaus/gaus2poscar] [--file input file] [--fout output file] [--ftype xyz/gaus (gaussian input file)] [--select boolean] [--direct boolean]  
 ```
 * `-job` option to select task to execute, currently available task 
-    **  `vasp2gaus` : Convert poscar or Contcar file to xyz or gaussian input file format 
-   ** `gaus2poscar` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
+    *  `vasp2gaus` : Convert poscar or Contcar file to xyz or gaussian input file format 
+    * `gaus2poscar` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
 * `--file` : The input file name 
 * `--fout` : The output file name 
 * `--ftype` :  Output file format, `xyz` or `gaus` (gaussian input file) 
