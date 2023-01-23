@@ -12,8 +12,8 @@ if __package__ == '':
     path = os.path.dirname(os.path.dirname(__file__))
     sys.path.insert(0, path)
 
-from vasputils import vasputils  # noqa
+from readgv import readgv  # noqa
 
 if __name__ == '__main__':
-    vasputils.main()
+    readgv.main()
 #    sys.exit(vasputils.main()) 

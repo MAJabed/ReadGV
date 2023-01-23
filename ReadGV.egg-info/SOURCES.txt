@@ -1,0 +1,14 @@
+README.md
+setup.py
+ReadGV.egg-info/PKG-INFO
+ReadGV.egg-info/SOURCES.txt
+ReadGV.egg-info/dependency_links.txt
+ReadGV.egg-info/top_level.txt
+readgv/COM2POSCAR.py
+readgv/CONTCAR2XYZ.py
+readgv/Plot.py
+readgv/__init__.py
+readgv/__main__.py
+readgv/fileconversion.py
+readgv/read_outcar.py
+readgv/readgv.py

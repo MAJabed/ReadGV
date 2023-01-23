@@ -5,7 +5,7 @@ import sys
 import warnings
 
 
-class outcar:
+class read_outcar:
     def __init__(self, filename='OUTCAR') :  
         self.filename = filename
     
@@ -21,7 +21,7 @@ class outcar:
         self.species = None
         self.final_data = {}
         self.iteration_data = []
-        self.fout = open(self.filename, 'r').read() 
+        self.outcar = open(self.filename, 'r').read() 
         
         
         self.poscar = None 
@@ -33,7 +33,7 @@ class outcar:
         self.outcar_parser() 
         
     def outcar_parser(self): 
-        f = self.fout 
+        f = self.outcar 
         #Reading poscar name 
         poscar = re.findall('POSCAR.*=.*',f)[-1].split('=') [-1].strip() 
         self.poscar = poscar  
@@ -67,7 +67,7 @@ class outcar:
         self.ion_list = ion_list   
         
     def outcar2incar(self): 
-        f = self.fout  
+        f = self.outcar 
         Tags = ['PREC','ISTART','ICHARG','ISPIN','LSORBIT','METAGGA','ENCUT','ENINI','NELM','EDIFF',
                 'LREAL','EDIFFG','NSW','IBRION','ISIF','POTIM','TEIN','TEBEG','TEEND','SMASS','RWIGS',
                 'EMIN','EFERMI','ISMEAR','IALGO','LWAVE','LCHARG','LORBIT','LMONO','LDIPOL','GGA','AEXX','NBANDS'] 
@@ -115,6 +115,7 @@ class outcar:
                             
                     except IndexError:  
                         line = f.readline() 
+                break 
             else : 
                 line = f.readline()            
         
@@ -129,10 +130,10 @@ class outcar:
             print('No error found in initial coordinates')
         #f.close() 
     
-    def input_geom(self, out=False,fname=None, **kwargs):  
-        if fname==None: 
-            fname = '%s.xyz'%self.poscar
-        f =  self.fout   
+    def input_geom(self, out=False,fout=None, **kwargs):  
+        if fout==None: 
+            fout = '%s_ini.xyz'%self.poscar
+        f =  self.outcar   
         var =  "position of ions in fractional coordinates.*\n((.*\n){%i})"%self.tot_ions 
         frac_coordinates = re.findall(fr"{var}", f)[0][0].split('\n')  
         frac_coordinates = [i for i in frac_coordinates if len(i.strip()) != 0] 
@@ -155,8 +156,8 @@ class outcar:
             return None  
         else : 
             CC = ['{:<3}'.format(self.ion_list[i])+CC[i] for i in range(self.tot_ions)] 
-            if out is True: 
-                ff = open(fname,'w')
+            if out is True:  # Destination: user output, Flase : return a variable for other function 
+                ff = open(fout,'w')
                 ff.write(' %s\n %s \n'%(len(CC),self.poscar)) 
                 for line in CC: 
                     ff.write('{:<3}{:>16}{:>16}{:>16} \n'.format(line.split()[0],line.split()[1],line.split()[2],line.split()[3]))
@@ -165,8 +166,10 @@ class outcar:
 #            print('Following is the input geometry in fractional coordinates') 
                 return CC
         
-    def md_traj(self,out=False):
-        f = self.fout 
+    def md_traj(self,out=False, fout=None):
+        if fout==None: 
+            fout = '%s_traj.xyz'%self.poscar 
+        f = self.outcar 
         n_iteration = self.n_iteration  # = int(re.findall(r"Iteration   .*", f)[-1][10:16])
         Trajectory = np.zeros((n_iteration, self.tot_ions,3))
         # Regex itreation is quite slow, need to change it 
@@ -178,9 +181,9 @@ class outcar:
             Trajectory[j,:,:] = geom          
         
         # Writing the file in xyz format 
-        print(out)
+        #print(out)
         if out != False: 
-            traj_out = open(out,'w') 
+            traj_out = open(fout,'w') 
             for i in range(n_iteration): 
                 traj_out.write('{} \nFrame {} \n'.format(self.tot_ions,i+1))
                 for j in range(self.tot_ions): 
@@ -189,11 +192,10 @@ class outcar:
                 traj_out.write('\n') 
             traj_out.close()  
         else: 
-            print('afsdfasdf')
             return Trajectory 
     
     def kpoint_dimension(self): 
-        f=self.fout 
+        f=self.outcar 
         var = "k-points in units of 2pi.*\n((?:.*\n){%i})"%self.nkpoints 
         kpoints_dim_2pi = np.loadtxt( re.findall(fr"{var}", f).split('\n'),dtype=float)  
 
@@ -202,13 +204,13 @@ class outcar:
         return kpoints_dim_2pi, kpoints_dim_recipr 
         
     def fermi_energies(self): 
-        f=self.fout
+        f=self.outcar
         fermi_all = re.findall(r'E-fermi : .*',f)  
         fermi_alphabeta = np.array([[float(i.split(':')[1].split()[0]),float(i.split(':')[3])] for i in fermi_all])
         return fermi_alphabeta 
     
     def band_energies(self) :
-        f=self.fout 
+        f=self.outcar 
         States = np.zeros((self.nkpoints, self.n_iteration, self.nbands,3))
         
         for k in range(self.nkpoints): 
@@ -221,11 +223,12 @@ class outcar:
         return States 
        
     def free_energy(self): 
-        f=self.fout 
+        f=self.outcar 
         free_en = np.array([i.split() for i in re.findall(r'free  energy.*', f)])[:,-2].astype(float) 
         return free_en 
-    
-        
+
+
+
             
 #if __name__ == '__main__': 
 #    f = 'Datafiles/OUTCAR' 

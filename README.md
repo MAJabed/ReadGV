@@ -8,17 +8,24 @@ This is actively developing version. Current version is very first trial.
 
 ## Running VaspUtils 
 ```python 
-python  python -m vasputils [-job] [vasp2gaus/gaus2poscar] [--file input file] [--fout output file] [--ftype xyz/gaus (gaussian input file)] [--select boolean] [--direct boolean]  
+python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file input file] [--fout output file] [--ftype xyz/gaus (gaussian input file)] [--select boolean] [--direct boolean]  
 ```
 * `-job` option to select task to execute, currently available task 
     *  `vasp2gaus` : Convert poscar or Contcar file to xyz or gaussian input file format 
     * `gaus2poscar` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
+    * `read_bands` : Read selected or all bands from OUTCAR and write in a file or print 
+    * `get_geom` : Write or print molecular dynamic trajectory from the OUTCAR files 
+    
 * `--file` : The input file name 
 * `--fout` : The output file name 
 * `--ftype` :  Output file format, `xyz` or `gaus` (gaussian input file) 
 * `--select` : `Boolean`, select coordinates in POSCAR file
 * `--direct` : `Boolean`, direct or cartesian coordinates in POSCAR file format 
-
+* `--bands` : No of bands to read, default 100 
+* `--frames` : MD frames to read,  last frame  `final`, initial frame `initial`, all `all`, 
+last n frames `-n`, first n frame `n`
+* `--nthkpoint` : integar, read outcar data of nth Kpoints
+* `--coord' : output coordinates in Cartesian `cart` or fractional `frac` 
 
 
 
