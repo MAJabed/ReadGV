@@ -10,5 +10,6 @@ readgv/Plot.py
 readgv/__init__.py
 readgv/__main__.py
 readgv/fileconversion.py
+readgv/mathstats.py
 readgv/read_outcar.py
 readgv/readgv.py

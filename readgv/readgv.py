@@ -10,10 +10,13 @@ try :
     from read_outcar import * 
     from Plot import * 
     from fileconversion import * 
+    from mathstats import * 
+    
 except: 
     from .read_outcar import * 
     from .Plot import * 
     from .fileconversion import * 
+    from .mathstats import * 
     
 class Warning: 
     def file_exist( name): 
@@ -28,7 +31,7 @@ def main():
     parser.add_argument("-job", dest="job", action="store", default=None, type=str.lower,
                         help="task to perform")
     parser.add_argument("--file", dest="fname", default=None, type=str, 
-                        help = 'file name to convert'),
+                        help = 'input file name'),
     parser.add_argument("--fout", dest="fout", default=None, type=str, 
                         help = 'output file name'),
     parser.add_argument("--ftype", dest="ftype", default="xyz", type=str, 
@@ -47,6 +50,25 @@ def main():
     parser.add_argument("--coord", dest="coord", default='cart', type=str, 
                         help = 'Output coordinate types')
 
+    parser.add_argument("--plot", dest="plot",  type=lambda x: True if x=='True' else x, default=False, 
+                        help="Plot output")
+    parser.add_argument("--sigma", dest='sigma',default=0.1, type=float,
+                        help = 'Linewidth for the Gaussian broadening, default 0.1 eV')
+    parser.add_argument("--shiftfermi", dest="shiftfermi", action='store_true', default=False, 
+                        help = 'Plot shift to Fermi energies')
+    parser.add_argument("--xlim", dest="xlim",  nargs='+', type=float, default=None, 
+                        help = 'Lower and upper limit of the X axis')
+    parser.add_argument("--alpha", dest="alpha",  type=float, default=0.4, 
+                        help = 'Set transpaency of a matplotlib graph') 
+    parser.add_argument("--theta", dest="theta", type=float, default=45, 
+                        help = 'X-axis rotation for 3D view of waterfall graphs')    
+    parser.add_argument("--gamma", dest="gamma", type=float, default=20, 
+                        help = 'Z-axis rotation for 3D view of waterfall graphs')    
+    parser.add_argument("--unit", dest="unit", type=str.lower, default='ev', 
+                            help = 'Absorption spectra in eV or nm unit?, default in eV unit') 
+    parser.add_argument("--figsize", dest="figsize",  nargs='+', type=int, default=(7,5), 
+                            help = 'Plot figure size, integer list, default (7,5)')    
+    
     
     (options, args) = parser.parse_known_args() 
     #print(options)
@@ -114,17 +136,73 @@ def main():
                               else a ))))   
         
         outcar = read_outcar(filename=fname)
-        Bands = outcar.band_energies()   # Output dimension is K points x frames x bands x 3 
+        Bands_all = outcar.band_energies()   # Output dimension is K points x frames x bands x 3 
         
-        Bands = get_frame(Bands,nthkpoints, frames) 
-        Fermi_1 = outcar.fermi_energies()[0,0] 
-        nhomo  = int(Bands[0,:,0][Bands[0,:,1] < Fermi_1][-1])  
+        Bands = get_frame(Bands_all,nthkpoints, frames) 
+        
+        Fermi = outcar.fermi_energies()
+        Fermi_frames = Fermi[-1,0] if frames =='final' else (Fermi[0,0] if frames=='initial' 
+                                              else(Fermi[:,0] if frames=='all'
+                                                   else (Fermi[int(frames),0] if frames.isdigit() 
+                                                         else(Fermi[int(frames),0] if frames.lstrip('-').isdigit() 
+                                                              else Fermi[:,0] ))))
+        print(Fermi[0], 'Fermi zerooooooo')
+        nhomo  = int(Bands[0,:,0][Bands[0,:,1] < Fermi_frames[0]][-1])  
         nbands = nbands if nbands < nhomo else nhomo-1 
         
-        Bands = Bands[:,nhomo-nbands-1:nhomo+nbands-1,:] 
-              
+        if options.plot == True:  
+            print(Bands_all.shape)
+            x = Bands_all[nthkpoints,-1,:,1] .astype(float)
+           
+            if options.shiftfermi: 
+                x = x - outcar.fermi_energies()[-1,0]  
+            if options.xlim: 
+                xlim=options.xlim 
+                #print(xlim)
+                x = x[(x>xlim[0]) & (x<xlim[1]) ] 
+            sigma = options.sigma
+            x,y = Gauss_distr(x, sigma=sigma )  
+            if not options.fout : 
+                name = fname
+            else: 
+                name ='DOS_%s'% options.fout 
+                
+            plot_line(x,y, name = name, xlim=xlim, ylim=(0,),ls=None, lw=None, colors ='g', xticks=None, yticks=None, 
+                          xticklabels=None, yticklabels=None,xlabel=r'E-$E_{fermi}$', ylabel=None)  
+            np.savetxt('%s.dat'%name, np.c_[x,y],fmt='%0.4f  %0.4f' )    
         # Data write in a file options.fout, else print
-        if options.fout != None: 
+    
+        elif options.plot=='dos_all': 
+            if not options.fout : 
+                name = fname
+            else: 
+                name = options.fout
+            if options.xlim: 
+                xlim=options.xlim 
+            else: 
+                xlim=[Fermi_frames[0]-3,Fermi_frames[0]+3]   
+            Bands_for_dos = Bands [:,:,1] 
+
+            if options.shiftfermi: 
+                Bands_for_dos =Bands_for_dos - Fermi_frames[:,None]
+                xlim = xlim - Fermi_frames[0]
+            print(xlim)
+           # print(Bands_for_dos[0,:] >  ) 
+            if options.xlim: 
+                 xlim=options.xlim 
+                 #print(xlim)
+                 Bands_for_dos = Bands_for_dos.T[(Bands_for_dos[0,:] >xlim[0]) & (Bands_for_dos[0,:]<xlim[1]) ]
+ #                Bands_for_dos = Bands_for_dos
+            sigma = options.sigma            
+            x,y = Gauss_distr(Bands_for_dos, sigma=sigma) 
+
+            plot_waterfall(x,y,xlim=xlim,ylim=None, gamma = options.gamma, theta=options.theta, alpha=options.alpha,
+                           color=None,name='DOS_all_%s'%name)
+            np.savetxt('bands_all_%s.dat'%name,Bands_for_dos,fmt='%0.5f') 
+            np.savetxt('Dress_dos_all_%s.dat'%name, np.c_[x,y], fmt='%0.4f') 
+
+        elif options.fout != None: 
+            Bands = Bands[:,nhomo-nbands-1:nhomo+nbands-1,:] 
             if Bands.ndim <3: #it indicates one frame only 
                 with open(options.fout,'w') as f: 
                     np.savetxt(f,Bands, fmt='%-4.i   %-10.6f    %-10.6f')
@@ -139,8 +217,9 @@ def main():
                 print('Can not find a way to write in a file') 
                 print(Bands) 
         else: 
+            Bands = Bands[:,nhomo-nbands-1:nhomo+nbands-1,:]
             print(Bands) 
-
+            
     elif options.job == 'get_geom':
         fname = options.fname 
         fout = options.fout   
@@ -171,7 +250,59 @@ def main():
         else: 
             print(Trajectory)
             
+    elif options.job == 'abs_gaus': 
+        if options.fname: 
+            fname  = options.fname 
+        else: 
+            print(parser.print_help()) 
+            print('Provide gaussian TDDFT output file name') 
+            sys.exit () 
 
+        if options.fout: 
+            fout = options.fout 
+        else: 
+            fout = os.path.splitext(os.path.basename(options.fname))[0]
+        
+        unit = options.unit 
+        
+        flog = open(fname)
+        lines = flog.read() 
+        Excited_state = re.findall(r'Excited State.*',lines) 
+        Excited_state =np.array([[i.split()[2].strip(':'),i.split()[4],i.split()[6],i.split()[8].split('=')[-1]] for i in Excited_state]).astype(float) 
+
+        if options.unit=='ev': 
+            X,OS = Excited_state[:,1],Excited_state[:,-1] 
+        if options.unit=='nm': 
+            X,OS = Excited_state[:,2],Excited_state[:,-1] 
+
+        XX,YY = Dress_abs(X,OS,linewidth=options.sigma, unit=options.unit) 
+        np.savetxt('Absorption_%s_lw%s.dat'%(fout,options.sigma), np.c_[XX,YY], fmt='%0.4f  %0.4f' if unit=='ev' else '%0.2f  %0.4f') 
+
+        if options.xlim: 
+            print('User provided xlim', options.xlim) 
+            x1,x2 = options.xlim 
+        else:
+            if unit=='nm': 
+                x1 = 250
+                x2 = 50*(XX[YY>YY.max()*0.001][0]//50+1) 
+            else: 
+                x1 = 0.0
+                x2 = 1+int(XX[YY>YY.max()*0.001][-1]) 
+        if not  all([abs(x1-x2)<50, unit=='ev']) | all([abs(x1-x2)>50, unit=='nm']):
+            print('\n**Unit of absorption and xlim are not compatible**\n') 
+            
+        y2 = YY[(XX>x1) & (XX<=x2)].max()*1.2   
+
+        ylabel = r'Absorption, $Lmol^{-1}cm^{-1}$'
+        xlabel = 'Energy, %s' %('eV' if unit=='ev' else unit) 
+
+        plt.rcParams.update({'font.size': 20})
+        
+        plot_line(XX,YY, xlim=[x1,x2], ylim=[0,y2], xlabel=xlabel, ylabel=ylabel, figsize=options.figsize, 
+                  name='Absorption_%s_lw%s.png'%(fout,options.sigma))  
+
+        
+        
                     
         #    print(a.outcar2incar())
         #    a.md_traj(out='Temmp_md.dat')  

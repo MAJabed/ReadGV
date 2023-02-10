@@ -30,7 +30,9 @@ class read_outcar:
         self.paw_rwigs_rad = [] #RWIGS from postcar informatio in outcar 
         self.ibrion = None 
         self.incar = {} 
+        #self.outcar_distance_warning()
         self.outcar_parser() 
+        
         
     def outcar_parser(self): 
         f = self.outcar 
@@ -126,6 +128,7 @@ class read_outcar:
                 print('Atom', j, ' and ', ion_distancewith[i], ' distance' , ion_distance[i] ) 
                 Corr_geom=False 
                 f.close() 
+                sys.exit() 
         if Corr_geom==True: 
             print('No error found in initial coordinates')
         #f.close() 
@@ -179,7 +182,8 @@ class read_outcar:
         for j,i in enumerate(geom_i): 
             geom = np.loadtxt(i[0].split('\n')[:-1])[:,:3] 
             Trajectory[j,:,:] = geom          
-        
+        if len(geom_i) != n_iteration: 
+            print('All ionic iteractions aren\'t finished completely')
         # Writing the file in xyz format 
         #print(out)
         if out != False: 
@@ -197,8 +201,7 @@ class read_outcar:
     def kpoint_dimension(self): 
         f=self.outcar 
         var = "k-points in units of 2pi.*\n((?:.*\n){%i})"%self.nkpoints 
-        kpoints_dim_2pi = np.loadtxt( re.findall(fr"{var}", f).split('\n'),dtype=float)  
-
+        kpoints_dim_2pi = np.loadtxt( re.findall(fr"{var}", f).split('\n'),dtype=float)
         var = "k-points in reciprocal lattice and weights.*\n((?:.*\n){%i})"%self.nkpoints 
         kpoints_dim_recipr = np.loadtxt( re.findall(fr"{var}", f).split('\n'),dtype=float)  
         return kpoints_dim_2pi, kpoints_dim_recipr 
@@ -227,7 +230,10 @@ class read_outcar:
         free_en = np.array([i.split() for i in re.findall(r'free  energy.*', f)])[:,-2].astype(float) 
         return free_en 
 
-
+class read_procar: 
+    def __init__(self, filename='PROCAR') :  
+        self.filename = filename
+    
 
             
 #if __name__ == '__main__': 

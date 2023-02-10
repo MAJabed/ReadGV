@@ -13,7 +13,7 @@ python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file in
 * `-job` option to select task to execute, currently available task 
     *  `vasp2gaus` : Convert poscar or Contcar file to xyz or gaussian input file format 
     * `gaus2poscar` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
-    * `read_bands` : Read selected or all bands from OUTCAR and write in a file or print 
+    * `read_bands` : Read selected or all bands from OUTCAR and write in a file, print or plot (follow `--plot`)
     * `get_geom` : Write or print molecular dynamic trajectory from the OUTCAR files 
     
 * `--file` : The input file name 
@@ -22,11 +22,18 @@ python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file in
 * `--select` : `Boolean`, select coordinates in POSCAR file
 * `--direct` : `Boolean`, direct or cartesian coordinates in POSCAR file format 
 * `--bands` : No of bands to read, default 100 
-* `--frames` : MD frames to read,  last frame  `final`, initial frame `initial`, all `all`, 
-last n frames `-n`, first n frame `n`
+* `--frames` : MD frames to read,  last frame  `final`, initial frame `initial`, all `all`, last n frames `-n`, first n frame `n`
 * `--nthkpoint` : integar, read outcar data of nth Kpoints
-* `--coord' : output coordinates in Cartesian `cart` or fractional `frac` 
-
+* `--coord` : output coordinates in Cartesian `cart` or fractional `frac` 
+* `--plot` : Plot output of `-job`, special arguments: `dos_all` to plot DOS of all frames in waterfall graphs (This function may not produce the best figure in come cases) 
+* `--shiftfermi` : Band energies shift by Fermi energy 
+* `--xlim` : X-axis limit, input type: list - `lower upper` 
+* `--sigma` : float, linewidth for Gaussian dressing, default 0.1 eV
+* `--theta` : Rotation of X-axis for 3D view of waterfall graph, degree unit. 
+* `--gamma` : Rotation of Z axis for 3D view of waterfall graph, degree unit.
+* `--alpha` : Adjust the transparency of a matplotlib graph plot`[0-1]`  
+* `--unit` : Unit of a calculations, eg. `eV` or `nm` in absorption spectra calculations 
+* `--figsize`: Matplotlib graph figure size, default `(7,5)`
 
 
 ---
