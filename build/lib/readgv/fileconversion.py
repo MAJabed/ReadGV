@@ -7,11 +7,7 @@ Created on Fri Dec 23 21:33:16 2022
 import numpy as np 
 import math 
 import os 
-try: 
-    from read_poscar import *  
-except: 
-    from .read_poscar import * 
-    
+
 def angle(a,b):
     import numpy as np 
     a=np.asarray(a) 
@@ -21,13 +17,8 @@ def angle(a,b):
     return  np.arccos(np.dot(unitV1, unitV2))
 
 
-def contcar2com(name, nameout,Gaus_out=False, tv=True, key_dict={}): 
-#                func='pbe1pbe',calc='opt',basis='6-31G*', pseudo='lanl2dz'):  # name is the contcar file name 
-    Keys ={'func':'pbe1pbe','calc':'opt','basis':'6-31G*', 'pseudo':'lanl2dz',
-           }
-    Keys.update(key_dict) 
-    name_out = os.path.splitext(nameout)[0]
-    file_ext = os.path.splitext(nameout)[1] 
+
+def contcar2com(name, name_out,Gaus_out=False):  # name is the contcar file name 
     f_cont = open(name,'r') 
     # reading file, and cell normalizing factor  
     line_cont = f_cont.readlines()  
@@ -108,20 +99,20 @@ def contcar2com(name, nameout,Gaus_out=False, tv=True, key_dict={}):
         Cord_Str = np.c_[np.asarray(ions_list),np.asarray(Cart_Cord).round(4)] 
       #  Cord_Str = np.c_[np.asarray(ions_list),np.asarray(np.array_str(np.asarray(Cart_Cord),precision=4))] 
    
-    #print(name_out)
+    print(name_out)
     if Gaus_out == True: 
         Header = '''%%mem=20GB
 %%nprocshared=40
 %%chk=%s.chk 
 
-#p %s %s/gen nosymm pseudo=read scf=maxcycles=10000
+#p opt pbe1pbe/gen nosymm pseudo=read scf=maxcycles=10000
 
 %s
 
 0 1
-''' %(name_out,Keys['calc'],Keys['func'], sys_name.rstrip('\n')) 
+''' %(name_out,sys_name.rstrip('\n')) 
 
-        with open(name_out+file_ext, "w") as fout:
+        with open('%s.com'%name_out, "w") as fout:
             fout.write(Header)
    #         print(Cord_Str)
             if selec_dynm is True: 
@@ -131,22 +122,22 @@ def contcar2com(name, nameout,Gaus_out=False, tv=True, key_dict={}):
                 np.savetxt(fout, Cord_Str,fmt='%-5.10s  %-10.6s  %-10.10s  %-10.10s')
                
             PBC = np.c_[np.asarray(['Tv','Tv','Tv']),xyz.astype('<U10')] 
-            if tv: 
-                np.savetxt(fout, PBC,fmt='%-5.10s  %-010.8s  %-10.8s  %-10.10s') 
+            np.savetxt(fout, PBC,fmt='%-5.10s  %-010.8s  %-10.8s  %-10.10s') 
              
-        print('Gaussian input file is written in the file name %s' %(name_out+file_ext))   
+        print('Gaussian input file is written in the file name %s.com' %name_out)  
         fout.close() 
 
 
     else :
-        with open(name_out+file_ext, "a") as fout: 
+        with open('%s.xyz'%name_out.rstrip('.xyz'), "a") as fout: 
             #print(len(Cord_Str))
             fout.write('%i \n' %len(Cord_Str))
             fout.write('%s \n' %sys_name.rstrip('\n')) 
             np.savetxt(fout,np.c_[Cord_Str[:,0],Cord_Str[:,-3:]],
                        fmt='%-5.10s  %-10.10s  %-10.10s  %-10.10s') 
-        print('xyz file is written in the file name %s' %(name_out+file_ext)) 
+        print('xyz file is written in the file name %s.xyz' %name_out) 
         fout.close() 
+
 
 def com2poscar(name,name_out=True, select=False, direct=True): 
     def angle(a,b):
@@ -162,36 +153,37 @@ def com2poscar(name,name_out=True, select=False, direct=True):
     commandkeys = [] 
      
     while line : 
+        print('%' in line)
         if '%' in line: 
+#            print(line)
             topheader.append(line)
             line = file.readline() 
+#            print('command')
         else: 
             break 
     if len(line.strip())==0: 
         line = file.readline() 
     while line : 
         if '#' in line: 
-#            commandkeys.append(line)
-            key_lines = line.strip('\n')
+            commandkeys.append(line)
             line=file.readline() 
-        elif len(line.strip())!=0:
-            key_lines = key_lines+line 
-            line = file.readline() 
-        else:
-            commandkeys.append(key_lines) 
+#            print('keys')
+        else: 
             break 
     if len(line.strip())==0: 
         line=file.readline() 
         
     comp_name = line.strip('\n') 
     line = file.readline() 
+#    print('name')
         
     if len(line.strip())==0: 
         line=file.readline()  
     Coord = []
     TVs= [] 
     while line: 
-        if (len(line.split())%2 ==0 ) & all([i.replace('-','').isdigit() for i in line.split()]) :
+        if (len(line.split())%2 ==0 ) & all([i.isdigit() for i in line.split()]) :
+#            print('charg_multi')
             chrg_multi = line.strip('\n') 
             line = file.readline() 
             while line :
@@ -277,15 +269,15 @@ def com2poscar(name,name_out=True, select=False, direct=True):
         fout.write(name_+'\n')
         fout.write(' 1.000000  \n') 
         for j in range(3): 
-            fout.write('  %0.6f   %0.6f    %0.6f  \n' %(TVV[j,0],TVV[j,1],TVV[j,2])) 
+        	fout.write('  %0.6f   %0.6f    %0.6f  \n' %(TVV[j,0],TVV[j,1],TVV[j,2])) 
         
         # Ions types 
         for i in ions_name: 
-            fout.write(' %s '%i) 
+        	fout.write(' %s '%i) 
         fout.write('\n') 
         #Number of each Ions type 
         for i in ions_count: 
-            fout.write(' %i ' %i) 
+        	fout.write(' %i ' %i) 
         fout.write('\n') 
         
         #Writing the Coordinates

@@ -11,38 +11,21 @@ try :
     from Plot import * 
     from fileconversion import * 
     from mathstats import * 
-    from read_procar import * 
-    from read_poscar import * 
-    from read_gaussian_log import * 
     
 except: 
     from .read_outcar import * 
     from .Plot import * 
     from .fileconversion import * 
     from .mathstats import * 
-    from .read_procar import * 
-    from .read_poscar import * 
-    from .read_gaussian_log import *
-
     
 class Warning: 
-    def file_not_exist( name): 
+    def file_exist( name): 
         if  not  os.path.isfile(name): 
             print('warning! file not found - %s' %name) 
             exit()
         else : pass 
-    def VaspOrGaus(fname, vasp=False, gaussian=False): 
-        ff = open(fname)
-        ini_line = ff.readline() 
-        if not 'Gaussian' in ini_line:
-            if gaussian == True: 
-                exit('%s is not a gaussian output log file' %fname) 
-        elif not 'vasp' in ini_line: 
-            if vasp == True : 
-                exit('%s is not a VASP OUTPUT type file'%fname) 
-        else: pass  
 
-    
+
 def main(): 
     parser = ArgumentParser() 
     parser.add_argument("-job", dest="job", action="store", default=None, type=str.lower,
@@ -89,79 +72,52 @@ def main():
     
     (options, args) = parser.parse_known_args() 
     #print(options)
-    #print( args)
+   #print( args)
     
-    # making some confusing given argument right. 
-    if options.job == 'vasp2com' or options.job =='contcar2com' : 
-       options.job = 'vasp2gaus' 
-       options.ftype = 'gaus' 
-
- 
-   
     if options.job == 'vasp2gaus': 
         if options.fname is None: 
-            options.fname = input('What is the POSCAR file name? :').lstrip().rstrip() 
+            options.fname = input('What is the POSCAR file name? :').strip() 
         fname = options.fname
-        Warning.file_not_exist(fname)  
         
         if options.fout is None: 
-            if options.ftype =='gaus' or options.ftype =='com': 
-                file_ext = '.com' 
-            elif options.ftype =='xyz':  
-                file_ext = '.xyz'
-            else: 
-                file_ext = '' 
-            name_out = os.path.splitext(options.fname)[0] 
-        else: 
-            file_ext = os.path.splitext(options.fout)[1] 
-            name_out = options.fout # os.path.splitext(options.fout)[0]  
-            
-        if os.path.isfile(name_out+file_ext ): #'%s.com'%name_out):
-            print ('%s is exist'%(name_out+file_ext ))  
-            name_out_ = input('What should be the output file name?:').rstrip().lstrip() #.rstrip('.com')  
-            if not len(name_out_)==0: 
-                file_ext = os.path.splitext(name_out_)[1]
-                name_out= os.path.splitext(name_out_)[0]   
-            if os.path.isfile(name_out+file_ext ):  # overwritting the file if no name is given 
-                print('Overwriting the file %s' %(name_out+file_ext)) # name_out = name_out+'_'+''.join(random.choices(string.ascii_lowercase, k=5)) 
-                os.remove(name_out+file_ext ) 
-        
-        if options.ftype =='gaus' or options.ftype =='com': 
+            options.fout = os.path.splitext(options.fname)[0]
+        name_out = os.path.splitext(options.fout)[0]  
+
+        if options.ftype =='gaus': 
             Gaus_out = True 
-# =============================================================================
-#         elif options.ftype =='xyz': 
-#             Gaus_out = False
-#             if os.path.isfile('%s.xyz'%name_out):
-#                 print ('%s.xyz is exist'%name_out) 
-#                 name_out_ = input('What should be the output file name?:').rstrip().lstrip().rstrip('.xyz')  
-#                 if not len(name_out_)==0: 
-#                     name_out= name_out_     
-#                 if os.path.isfile('%s.xyz'%name_out): 
-#                     os.remove('%s.xyz'%name_out) 
-#                     print('Overwriting the file %s.xyz'%name_out) 
-# =============================================================================
-        else: 
-            print('not recognize the file type option, ftype -> %s'%options.ftype) 
-            sys.exit() 
-        print(name_out, file_ext)
-        contcar2com(fname, name_out+file_ext,Gaus_out=Gaus_out) 
+            if os.path.isfile('%s.com'%name_out):
+                print ('%s.com is exist'%name_out) 
+                name_out_ = input('What should be the output file name?:').replace(" ", "").rstrip('.com')  
+                if not len(name_out_)==0: 
+                    name_out= name_out_     
+                if os.path.isfile('%s.com'%name_out):  # overwritting the file if no name is given 
+#                    name_out = name_out+'_'+''.join(random.choices(string.ascii_lowercase, k=5)) 
+                    os.remove('%s.com'%name_out) 
+        if options.ftype =='xyz': 
+            Gaus_out = False
+            if os.path.isfile('%s.xyz'%name_out):
+                print ('%s.xyz is exist'%name_out) 
+                name_out_ = input('What should be the output file name?:').replace(" ", "").rstrip('.xyz')  
+                if not len(name_out_)==0: 
+                    name_out= name_out_     
+                if os.path.isfile('%s.xyz'%name_out): 
+                    os.remove('%s.xyz'%name_out) 
+                    print('Overwriting the file %s.xyz'%name_out) 
+   
+        contcar2com(fname, name_out,Gaus_out=Gaus_out) 
     
-    elif options.job == 'gaus2poscar' or options.job == 'gaus2vasp' :  
+    elif options.job == 'gaus2poscar': 
         fname = options.fname 
         
-        Warning.file_not_exist(fname)  
+        Warning.file_exist(fname)  
         
         file = open(fname,'r') 
         lines = file.read() 
         if not 'tv' in lines.lower() :
-            print('Warning! Periodic cell vectors are not found in file %s' %fname)   
-            exit('Add periodic cell in the com file')
+            print('Warning! Periodic cell vectors are not found in file %s' %fname)     
         file.close()  
         
-        if options.fout == None: 
-            name_out = os.path.splitext(fname)[0]+'.POSCAR'
-        else: 
-            name_out = options.fout #os.path.splitext(options.fout) 
+        name_out = os.path.splitext(options.fout)[0] 
         
         com2poscar(fname, name_out=name_out, select=options.select, direct = options.direct)  
 
@@ -245,7 +201,7 @@ def main():
             np.savetxt('bands_all_%s.dat'%name,Bands_for_dos,fmt='%0.5f') 
             np.savetxt('Dress_dos_all_%s.dat'%name, np.c_[x,y], fmt='%0.4f') 
 
-        if options.fout != None: 
+        elif options.fout != None: 
             Bands = Bands[:,nhomo-nbands-1:nhomo+nbands-1,:] 
             if Bands.ndim <3: #it indicates one frame only 
                 with open(options.fout,'w') as f: 
@@ -264,10 +220,8 @@ def main():
             Bands = Bands[:,nhomo-nbands-1:nhomo+nbands-1,:]
             print(Bands) 
             
-    elif options.job == 'get_geom': #read geometry/geomteries from optimization steps or MD trajectory from VASP calculations  
+    elif options.job == 'get_geom':
         fname = options.fname 
-        Warning.file_not_exist(fname)
-        Warning.VaspOrGaus(fname, vasp=True) 
         fout = options.fout   
         coord = options.coord 
         frames = options.frames
@@ -301,7 +255,7 @@ def main():
             fname  = options.fname 
         else: 
             print(parser.print_help()) 
-            print('Provide gaussian TDDFT output file name, example: --file output.log') 
+            print('Provide gaussian TDDFT output file name') 
             sys.exit () 
 
         if options.fout: 
@@ -316,32 +270,19 @@ def main():
         Excited_state = re.findall(r'Excited State.*',lines) 
         Excited_state =np.array([[i.split()[2].strip(':'),i.split()[4],i.split()[6],i.split()[8].split('=')[-1]] for i in Excited_state]).astype(float) 
 
-# =============================================================================
-#         if options.unit=='ev': 
-#             X,OS = Excited_state[:,1],Excited_state[:,-1] 
-#         if options.unit=='nm': 
-#             X,OS = Excited_state[:,2],Excited_state[:,-1] 
-# 
-# =============================================================================
-        OS = Excited_state[:,-1] 
- #       XX,YY = Dress_abs(X,OS,linewidth=options.sigma, unit=options.unit) 
-        XX_nm,YY_nm = Dress_abs(Excited_state[:,2],OS,unit='nm', linewidth=options.sigma) 
-        XX_ev,YY_ev = Dress_abs(Excited_state[:,1],OS,unit='ev', linewidth=options.sigma)
-        Excit_n = np.arange(len(Excited_state[:,-1]))+1
-        Dict = {'Energy,ev': XX_ev,'Absorbance_ev':YY_ev,
-            'Energy,nm':XX_nm,'Absorbance_nm':YY_nm,
-            'Excitation,ev' : Excited_state[:,1], 'Excitation,nm' : Excited_state[:,2], 
-            'OS' : Excited_state[:,-1], 'State': Excit_n 
-            } 
-        df = pd.DataFrame.from_dict(Dict, orient='index').transpose().fillna('') 
-        df.to_string('Absorption_%s_lw%0.2f.dat'%(fout,options.sigma),index=False) 
-#        np.savetxt('Absorption_%s_lw%s.dat'%(fout,options.sigma), np.c_[XX,YY], fmt='%0.4f  %0.4f' if unit=='ev' else '%0.2f  %0.4f') 
+        if options.unit=='ev': 
+            X,OS = Excited_state[:,1],Excited_state[:,-1] 
+        if options.unit=='nm': 
+            X,OS = Excited_state[:,2],Excited_state[:,-1] 
+
+        XX,YY = Dress_abs(X,OS,linewidth=options.sigma, unit=options.unit) 
+        np.savetxt('Absorption_%s_lw%s.dat'%(fout,options.sigma), np.c_[XX,YY], fmt='%0.4f  %0.4f' if unit=='ev' else '%0.2f  %0.4f') 
 
         if options.xlim: 
             print('User provided xlim', options.xlim) 
             x1,x2 = options.xlim 
         else:
-            if options.unit=='nm': 
+            if unit=='nm': 
                 x1 = 250
                 x2 = 50*(XX[YY>YY.max()*0.001][0]//50+1) 
             else: 
@@ -360,6 +301,13 @@ def main():
         plot_line(XX,YY, xlim=[x1,x2], ylim=[0,y2], xlabel=xlabel, ylabel=ylabel, figsize=options.figsize, 
                   name='Absorption_%s_lw%s.png'%(fout,options.sigma))  
 
+        
+        
+                    
+        #    print(a.outcar2incar())
+        #    a.md_traj(out='Temmp_md.dat')  
+        # F
+    
 
 if __name__ == "__main__":
     main() 

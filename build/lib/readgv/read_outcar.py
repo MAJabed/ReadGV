@@ -22,7 +22,8 @@ class read_outcar:
         self.final_data = {}
         self.iteration_data = []
         self.outcar = open(self.filename, 'r').read() 
-                
+        
+        
         self.poscar = None 
         self.paw_ions = []      # Ions from the potential function order in Outcar 
         self.no_ions = []  # Number of ions per ion type 
@@ -228,6 +229,11 @@ class read_outcar:
         f=self.outcar 
         free_en = np.array([i.split() for i in re.findall(r'free  energy.*', f)])[:,-2].astype(float) 
         return free_en 
+
+class read_procar: 
+    def __init__(self, filename='PROCAR') :  
+        self.filename = filename
+    
 
             
 #if __name__ == '__main__': 

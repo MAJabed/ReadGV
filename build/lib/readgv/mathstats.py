@@ -8,35 +8,32 @@ Created on Fri Feb  3 15:18:39 2023
 import numpy as np 
 import math 
 
-def Gauss_distr(X, Y = None, sigma=0.1,): 
+def Gauss_distr(X, sigma=0.1,): 
     ##  g(x)=1/(sigma*sqrt(2*pi))*{exp(-(x-b)^2/(2*sigma^2))}
-    if Y==None: 
-        Y = np.ones(X.shape) 
     norm = (sigma*np.sqrt(2*np.pi))**-1 
     
     if np.ndim(X) ==1: 
         x=np.arange(X[0], X[-1],0.05)
-        y = np.zeros((len(x)))
+        Y = np.zeros((len(x)))
         #Dressing with gaussian function
         for J in X:
-            yy =norm * np.exp(-1*(x-J)**2/(2*sigma**2))
-            y +=yy 
-        return x,y
-    
+            y =norm * np.exp(-1*(x-J)**2/(2*sigma**2))
+            Y +=y 
+        return x,Y 
     elif np.ndim(X) ==2: 
         x=np.arange(X.min(), X.max(),0.05)
-        yy = np.zeros((len(x), X.shape[1])) 
+        YY = np.zeros((len(x), X.shape[1])) 
         for i in range(X.shape[1]): 
-            y = np.zeros((len(x)))
+            Y = np.zeros((len(x)))
         #Dressing with gaussian function
             for J in X[:,i]:
-                yy =norm * np.exp(-1*(x-J)**2/((2*np.pi*sigma)**0.5))
-                y +=yy 
-            yy[:,i] = y  
-        return x, yy 
+                y =norm * np.exp(-1*(x-J)**2/(2*sigma**2))
+                Y +=y 
+            YY[:,i] = Y  
+        return x, YY 
+        
 
 def Dress_abs(X,OS, unit=None, linewidth=0.4,): 
-    
     """ 
     Absorption calculated using following equation. 
     Ei = {sqrt(pi)*e^2*N / (1000*ln(10).c^2*me)}* {fi/sigma} * exp[-{(x-xi) / sigma}^2 ] 
@@ -45,7 +42,7 @@ def Dress_abs(X,OS, unit=None, linewidth=0.4,):
     Avogrado number: N = 6.022*10**23 mol-1 
     speed of light: c=29979245800.0 cm·s-1 
     sigma in eV unit, and converted to nm unit 
-    """ 
+""" 
     e = 4.803204*10**-10
     me = 9.10938*10**-28 
     c = 29979245800.0  # cm·s-1 
@@ -83,37 +80,3 @@ def Dress_abs(X,OS, unit=None, linewidth=0.4,):
             y =norm * OS[j] *  np.exp(-1*((1/x-1/X[j])/(1/ev2nm(linewidth)))**2)   
             Y +=y 
         return x,Y
-    
-def unitcell2cartbasis(a,b,c,alpha=90,beta=90,gamma=90,volume=False): 
-    ''' Conversion of latice vector of a unit cell and angles to parallelepped vectors in a cartesian real space 
-        alpha is angle between b & c 
-        beta is angle between a & c and 
-        gamma is angle between a & b '''
-    cos = lambda r : math.cos(math.radians(r))
-    sin = lambda r : math.sin(math.radians(r)) 
-    
-    cc = (cos(alpha)-cos(beta)*cos(gamma) )/ sin(gamma) 
-    va = np.array([a,0,0]) 
-    vb = np.array([b*cos(gamma), b*sin(gamma),0]) 
-    vc = np.array([c*cos(beta), c*cc, c*(1-(cos(beta))**2-cc*2)**0.5]) 
-    if volume==True: 
-        v = a*b*c*(1+2*cos(alpha)*cos(beta)*cos(gamma)-(cos(alpha))**2-(cos(beta))**2-(cos(gamma))**2)**0.5    
-        return np.array([va,vb,vc]), v 
-    else: 
-        return np.array([va,vb,vc]) 
-    
-def Rzyx(alpha,beta,gamma): 
-    ''' Rotation matrix, in X Y and Z orders, angles are in degrees ''' 
-    cos = lambda r : math.cos(math.radians(r))
-    sin = lambda r : math.sin(math.radians(r))
-   
-    Rzyx = np.array([[cos(alpha)*cos(beta) , 
-                  cos(alpha)*sin(beta)*sin(gamma)-sin(alpha)*cos(gamma),
-                  cos(alpha)*sin(beta)*cos(gamma)+ sin(alpha)*sin(gamma)],
-                [sin(alpha)*cos(beta) , 
-                 sin(alpha)*sin(beta)*sin(gamma)+cos(alpha)*cos(gamma),
-                 sin(alpha)*sin(beta)*cos(gamma) - cos(alpha)*sin(gamma)],
-                [-sin(beta),cos(beta)*sin(gamma),cos(beta)*cos(gamma)]]) 
-    return Rzyx 
-    
-

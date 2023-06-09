@@ -21,11 +21,8 @@ def angle(a,b):
     return  np.arccos(np.dot(unitV1, unitV2))
 
 
-def contcar2com(name, nameout,Gaus_out=False, tv=True, key_dict={}): 
-#                func='pbe1pbe',calc='opt',basis='6-31G*', pseudo='lanl2dz'):  # name is the contcar file name 
-    Keys ={'func':'pbe1pbe','calc':'opt','basis':'6-31G*', 'pseudo':'lanl2dz',
-           }
-    Keys.update(key_dict) 
+def contcar2com(name, nameout,Gaus_out=False, tv=True):  # name is the contcar file name 
+    
     name_out = os.path.splitext(nameout)[0]
     file_ext = os.path.splitext(nameout)[1] 
     f_cont = open(name,'r') 
@@ -114,12 +111,12 @@ def contcar2com(name, nameout,Gaus_out=False, tv=True, key_dict={}):
 %%nprocshared=40
 %%chk=%s.chk 
 
-#p %s %s/gen nosymm pseudo=read scf=maxcycles=10000
+#p opt pbe1pbe/gen nosymm pseudo=read scf=maxcycles=10000
 
 %s
 
 0 1
-''' %(name_out,Keys['calc'],Keys['func'], sys_name.rstrip('\n')) 
+''' %(name_out,sys_name.rstrip('\n')) 
 
         with open(name_out+file_ext, "w") as fout:
             fout.write(Header)

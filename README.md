@@ -1,21 +1,24 @@
-# VaspUtils
+# ReadGV
 Python Script to read, edit, modify and visualize and file conversion for VASP and  Gaussian input and output! 
 
 This is actively developing version. Current version is very first trial. 
 
 ### Installation  
-* With pip `pip install -e VASPTools/` 
+* pip install -e git+git://github.com/MAJabed/ReadGV.git 
+* With pip `pip install readgv`
 
-## Running VaspUtils 
-```python 
-python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file input file] [--fout output file] [--ftype xyz/gaus (gaussian input file)] [--select boolean] [--direct boolean]  
+
+## Running ReadGV 
+```
+python -m readgv [-job] [vasp2gaus/gaus2poscar/read_bands**] [--file input file] [--fout output file] [--ftype xyz/gaus (gaussian input file)] [--select boolean] [--direct boolean]  
 ```
 * `-job` option to select task to execute, currently available task 
-    *  `vasp2gaus` : Convert poscar or Contcar file to xyz or gaussian input file format 
-    * `gaus2poscar` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
+    * `vasp2gaus` or `vasp2com` : Convert poscar or Contcar file to xyz or gaussian input file format 
+    * `gaus2poscar` or `gaus2vasp` : Convert gaussian input file to VASP POSCAR file format. Periodic cell (Tv) should be given in the .com file. 
     * `read_bands` : Read selected or all bands from OUTCAR and write in a file, print or plot (follow `--plot`)
     * `get_geom` : Write or print molecular dynamic trajectory from the OUTCAR files 
-    
+    * `abs_gaus` : Read Gaussian TDDFT output file, Dress excited energies using Gaussian fucntion to plot absorption spectra 
+
 * `--file` : The input file name 
 * `--fout` : The output file name 
 * `--ftype` :  Output file format, `xyz` or `gaus` (gaussian input file) 
@@ -32,9 +35,8 @@ python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file in
 * `--theta` : Rotation of X-axis for 3D view of waterfall graph, degree unit. 
 * `--gamma` : Rotation of Z axis for 3D view of waterfall graph, degree unit.
 * `--alpha` : Adjust the transparency of a matplotlib graph plot`[0-1]`  
-* `--unit` : Unit of a calculations, eg. `eV` or `nm` in absorption spectra calculations 
+* `--unit` : Unit of a calculation, eg. `eV` or `nm` in absorption spectra calculations 
 * `--figsize`: Matplotlib graph figure size, default `(7,5)`
-
 
 ---
 #### Disclaimer:
@@ -42,4 +44,4 @@ python  python -m vasputils [-job] [vasp2gaus/gaus2poscar/read_bands] [--file in
 ---
 #### License: 
 
-VaspUtils is freely available under an [MIT](https://opensource.org/licenses/MIT) License
+ReadGV is freely available under an [MIT](https://opensource.org/licenses/MIT) License
